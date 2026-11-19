@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import Modal from "../../components/Modal";
 import ImageUpload from "../../components/ImageUpload";
+import { confirmAction, showErrorAlert, showSuccessAlert } from "../../utils/alerts";
 
 export default function ManageProducts() {
   const [products, setProducts] = useState([]);
@@ -61,12 +62,13 @@ export default function ManageProducts() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this product?")) return;
+    if (!await confirmAction("Delete product?", "This product will be permanently removed.", "Delete product")) return;
     try {
       await api.delete(`/products/${id}`);
       fetchProducts();
+      showSuccessAlert("Product deleted", "The product has been removed.");
     } catch (err) {
-      alert(err.response?.data?.message || "Error");
+      showErrorAlert("Unable to delete product", err.response?.data?.message || "Please try again.");
     }
   };
 

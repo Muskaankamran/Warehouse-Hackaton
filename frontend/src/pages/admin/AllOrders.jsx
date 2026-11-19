@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import StatusBadge from "../../components/StatusBadge";
+import { showErrorAlert } from "../../utils/alerts";
 
 export default function AllOrders() {
   const [orders, setOrders] = useState([]);
@@ -20,7 +21,7 @@ export default function AllOrders() {
       await api.put(`/orders/${id}/status`, { status });
       fetchOrders();
     } catch (err) {
-      alert(err.response?.data?.message || "Error updating status");
+      showErrorAlert("Unable to update order", err.response?.data?.message || "Please try again.");
     }
   };
 

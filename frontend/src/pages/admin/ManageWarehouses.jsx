@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import Modal from "../../components/Modal";
+import { confirmAction, showErrorAlert, showSuccessAlert } from "../../utils/alerts";
 
 export default function ManageWarehouses() {
   const [warehouses, setWarehouses] = useState([]);
@@ -10,7 +11,6 @@ export default function ManageWarehouses() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: "", location: "", manager: "", capacity: 1000 });
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const fetchWarehouses = () => {
     setLoading(true);
@@ -25,42 +25,43 @@ export default function ManageWarehouses() {
   const openCreate = () => {
     setEditing(null);
     setForm({ name: "", location: "", manager: "", capacity: 1000 });
-    setError(""); setSuccess("");
+    setError("");
     setShowModal(true);
   };
 
   const openEdit = (w) => {
     setEditing(w);
     setForm({ name: w.name, location: w.location, manager: w.manager?._id || "", capacity: w.capacity });
-    setError(""); setSuccess("");
+    setError("");
     setShowModal(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); setSuccess("");
+    setError("");
     try {
       if (editing) {
         await api.put(`/warehouses/${editing._id}`, form);
-        setSuccess("Warehouse updated!");
+        showSuccessAlert("Warehouse updated", "Your changes have been saved.");
       } else {
         await api.post("/warehouses", form);
-        setSuccess("Warehouse created!");
+        showSuccessAlert("Warehouse created", "The new warehouse is ready.");
       }
       fetchWarehouses();
-      setTimeout(() => setShowModal(false), 1000);
+      setShowModal(false);
     } catch (err) {
       setError(err.response?.data?.message || "Error");
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this warehouse?")) return;
+    if (!await confirmAction("Delete warehouse?", "This warehouse will be permanently removed.", "Delete warehouse")) return;
     try {
       await api.delete(`/warehouses/${id}`);
       fetchWarehouses();
+      showSuccessAlert("Warehouse deleted", "The warehouse has been removed.");
     } catch (err) {
-      alert(err.response?.data?.message || "Error");
+      showErrorAlert("Unable to delete warehouse", err.response?.data?.message || "Please try again.");
     }
   };
 
@@ -98,7 +99,6 @@ export default function ManageWarehouses() {
       {showModal && (
         <Modal title={editing ? "Edit Warehouse" : "Add Warehouse"} onClose={() => setShowModal(false)}>
           {error && <div className="alert alert-error">{error}</div>}
-          {success && <div className="alert alert-success">{success}</div>}
           <form onSubmit={handleSubmit} className="modal-form">
             <div className="form-group">
               <label>Warehouse Name</label>

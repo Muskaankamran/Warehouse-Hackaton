@@ -2,17 +2,38 @@ import Warehouse from "../models/warehouse.model.js";
 import User from "../models/users.model.js";
 
 // GET /api/warehouses
+
 export async function getWarehouses(req, res) {
   try {
     let warehouses;
+
     if (req.user.role === "warehouseManager") {
-      warehouses = await Warehouse.find({ manager: req.user.id }).populate("manager", "name email");
+      const user = await User.findById(req.user.id)
+        .select("assignedWarehouses");
+
+      const assignedIds = user?.assignedWarehouses || [];
+
+      warehouses = await Warehouse.find({
+        $or: [
+          { manager: req.user.id },
+          { _id: { $in: assignedIds } }
+        ]
+      }).populate("manager", "name email");
+
     } else {
-      warehouses = await Warehouse.find().populate("manager", "name email");
+      warehouses = await Warehouse.find()
+        .populate("manager", "name email");
     }
+
     return res.status(200).json({ warehouses });
+
   } catch (error) {
-    return res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Get Warehouses Error:", error);
+
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message
+    });
   }
 }
 

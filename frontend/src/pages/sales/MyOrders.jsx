@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import StatusBadge from "../../components/StatusBadge";
+import { confirmAction, showErrorAlert, showSuccessAlert } from "../../utils/alerts";
 
 export default function MyOrders() {
   const [orders, setOrders] = useState([]);
@@ -16,12 +17,13 @@ export default function MyOrders() {
   useEffect(() => { fetchOrders(); }, [statusFilter]);
 
   const cancelOrder = async (id) => {
-    if (!window.confirm("Cancel this order?")) return;
+    if (!await confirmAction("Cancel order?", "This pending order will be cancelled.", "Cancel order")) return;
     try {
       await api.put(`/orders/${id}/cancel`);
       fetchOrders();
+      showSuccessAlert("Order cancelled", "The order has been cancelled.");
     } catch (err) {
-      alert(err.response?.data?.message || "Cannot cancel this order");
+      showErrorAlert("Unable to cancel order", err.response?.data?.message || "Please try again.");
     }
   };
 

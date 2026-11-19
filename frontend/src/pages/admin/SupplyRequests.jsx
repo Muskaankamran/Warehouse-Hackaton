@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import StatusBadge from "../../components/StatusBadge";
+import { showErrorAlert } from "../../utils/alerts";
 
 export default function SupplyRequests() {
   const [requests, setRequests] = useState([]);
@@ -18,7 +19,7 @@ export default function SupplyRequests() {
       await api.put(`/supply-requests/${id}/status`, { status });
       fetchRequests();
     } catch (err) {
-      alert(err.response?.data?.message || "Error");
+      showErrorAlert("Unable to update request", err.response?.data?.message || "Please try again.");
     }
   };
 

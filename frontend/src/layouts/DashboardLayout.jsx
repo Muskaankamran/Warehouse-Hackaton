@@ -1,10 +1,13 @@
-import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import gsap from "gsap";
 import { useAuth } from "../context/AuthContext";
 import Sidebar from "../components/Sidebar";
 
 export default function DashboardLayout() {
   const { user } = useAuth();
+  const location = useLocation();
+  const mainRef = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const initials = user?.name
     ?.split(" ")
@@ -13,6 +16,25 @@ export default function DashboardLayout() {
     .map((part) => part[0])
     .join("")
     .toUpperCase();
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const context = gsap.context(() => {
+      gsap.fromTo(
+        mainRef.current,
+        { autoAlpha: 0, y: 8 },
+        { autoAlpha: 1, y: 0, duration: 0.3, ease: "power1.out" }
+      );
+      gsap.fromTo(
+        ".page-header, .stats-grid > *, .dashboard-section, .card, .product-card, .warehouse-card, .order-card",
+        { autoAlpha: 0, y: 14 },
+        { autoAlpha: 1, y: 0, duration: 0.42, stagger: 0.045, ease: "power2.out" }
+      );
+    }, mainRef);
+
+    return () => context.revert();
+  }, [location.pathname]);
 
   return (
     <div className="dashboard-layout">
@@ -28,7 +50,7 @@ export default function DashboardLayout() {
         isOpen={sidebarOpen}
         onNavigate={() => setSidebarOpen(false)}
       />
-      <main className="dashboard-main">
+      <main className="dashboard-main" ref={mainRef}>
         <header className="workspace-topbar">
           <button
             type="button"

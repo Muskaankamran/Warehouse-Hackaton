@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import Modal from "../../components/Modal";
 import StatusBadge from "../../components/StatusBadge";
+import { confirmAction, showErrorAlert, showSuccessAlert } from "../../utils/alerts";
 
 export default function ManageUsers() {
   const [users, setUsers] = useState([]);
@@ -62,12 +63,13 @@ export default function ManageUsers() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this user?")) return;
+    if (!await confirmAction("Delete user?", "This user account will be permanently removed.", "Delete user")) return;
     try {
       await api.delete(`/users/${id}`);
       fetchUsers();
+      showSuccessAlert("User deleted", "The user account has been removed.");
     } catch (err) {
-      alert(err.response?.data?.message || "Error deleting user");
+      showErrorAlert("Unable to delete user", err.response?.data?.message || "Please try again.");
     }
   };
 

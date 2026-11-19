@@ -53,17 +53,58 @@ export async function createProduct(req, res) {
 }
 
 // PUT /api/products/:id
+
+
 export async function updateProduct(req, res) {
   try {
-    const { name, description, sku, category, price, lowStockLimit, supplier, imageUrl, imageFileId } = req.body;
-    const updateData = { name, description, sku, category, price, lowStockLimit, supplier, imageUrl, imageFileId };
-    Object.keys(updateData).forEach(k => updateData[k] === undefined && delete updateData[k]);
+    const {
+      name,
+      description,
+      sku,
+      category,
+      price,
+      lowStockLimit,
+      supplier,
+      imageUrl,
+      imageFileId
+    } = req.body;
 
-    const product = await Product.findByIdAndUpdate(req.params.id, updateData, { new: true });
-    if (!product) return res.status(404).json({ message: "Product not found" });
-    return res.status(200).json({ message: "Product updated", product });
+    const updateData = {
+      name,
+      description,
+      sku,
+      category,
+      price,
+      lowStockLimit,
+      supplier,
+      imageUrl,
+      imageFileId
+    };
+
+    Object.keys(updateData).forEach(
+      k => updateData[k] === undefined && delete updateData[k]
+    );
+
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { returnDocument: "after" }
+    );
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    return res.status(200).json({
+      message: "Product updated",
+      product
+    });
+
   } catch (error) {
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message
+    });
   }
 }
 
