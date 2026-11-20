@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from "express";
+import connectDB from "./db/db.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -32,7 +33,19 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+// Connect MongoDB before handling API requests
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error("Database connection failed:", error.message);
 
+    return res.status(500).json({
+      message: "Database connection failed",
+    });
+  }
+});
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);

@@ -1,18 +1,43 @@
-import 'dotenv/config';
-import dns from 'node:dns/promises';
-dns.setServers(['1.1.1.1', '8.8.8.8']);
 
-import chalk from 'chalk';
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
+import dns from "node:dns";
 
-async function main() {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log(chalk.white.bgGreen.bold("Connected to DB"));
-  } catch (err) {
-    console.error(chalk.blue.bgRed.bold("Error connecting to DB"), err.message);
-    throw err;
+dns.setServers(["1.1.1.1", "8.8.8.8"]);
+const cached = globalThis.mongooseCache || {
+  conn: null,
+  promise: null,
+};
+
+globalThis.mongooseCache = cached;
+
+async function connectDB() {
+  if (cached.conn) {
+    return cached.conn;
   }
+
+  if (!process.env.MONGODB_URI) {
+    throw new Error("MONGODB_URI is missing");
+  }
+
+  if (!cached.promise) {
+    cached.promise = mongoose
+      .connect(process.env.MONGODB_URI, {
+        maxPoolSize: 10,
+        serverSelectionTimeoutMS: 10000,
+      })
+      .then((mongooseInstance) => {
+        console.log("Connected to MongoDB");
+        return mongooseInstance;
+      })
+      .catch((error) => {
+        cached.promise = null;
+        console.error("MongoDB Connection Failed:", error.message);
+        throw error;
+      });
+  }
+
+  cached.conn = await cached.promise;
+  return cached.conn;
 }
 
-export default main;
+export default connectDB;
